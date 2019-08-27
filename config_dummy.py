@@ -1,0 +1,6 @@
+CONSUMER_KEY = "..."
+CONSUMER_SECRET = "..."
+ACCESS_TOKEN = "..."
+ACCESS_TOKEN_SECRET = "..."
+INSTAGRAM_EMAIL_ACCOUNT = "example@email.com"
+INSTAGRAM_PASSWORD = "password"
