@@ -1,7 +1,8 @@
 #import datetime as dt
 import subprocess as sp
 
-keyword = "自炊"
+user = "malin013"
+keyword = "自炊 from:"+user
 limit = "5"
 #begindate = str(dt.date(2006, 3, 21))
 #enddate = str(dt.date.today())
