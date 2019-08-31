@@ -7,13 +7,20 @@ import config
 import pandas as pd
 import urllib.request
 import mysql.connector as mydb
+import subprocess as sp
+
+
+#sp.call(["twitterscraper", keyword, "-l "+limit, "-o"+output_path])
+
 
 """
     params
 """
-path = './html/'
-img_path = './img/'
-sleep_time = 60
+sleep_time = 120
+
+user = "malin013"
+keyword = "自炊 from:"+user
+limit = "5"
 
 conn = mydb.connect(
     host='localhost',
@@ -23,6 +30,13 @@ conn = mydb.connect(
     database='tweet2insta'
 )
 cur = conn.cursor()
+
+"""
+    settings(do not touch)
+"""
+path = './html/'
+img_path = './img/'
+output_path = "data.json"
 
 """
     funcs
@@ -92,7 +106,11 @@ def post_instagram(photo_path, caption):
 
 
 if __name__ == '__main__':
-    df = pd.read_json('data.json', encoding='utf-8')
+    if os.path.exists(output_path):
+        sp.call(["twitterscraper", keyword, "-l "+limit, "-o"+output_path])
+    else:
+        print(output_path + " is found, skip scraping...")
+    df = pd.read_json(output_path, encoding='utf-8')
     df = make_html_url(df)
 
     if len([name for name in os.listdir(path)]) == 0:
@@ -100,7 +118,8 @@ if __name__ == '__main__':
         for d in df['html_url']:
             if d != "":
                 download_media("https://"+d, path+d.split('/')[-1]+'.html')
-
+    else:
+        print("html found, skip downloading html...")
     # Extract image from html files
     df['img_url'] = ""
     for i,d in enumerate(df['html_url']):
