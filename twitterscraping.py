@@ -1,22 +1,14 @@
-from twitterscraper import query_tweets
+#import datetime as dt
+import subprocess as sp
 
-"""
-    params
-    q: keyword included in tweet
-    user: username written after @
-"""
+keyword = "自炊"
+limit = "5"
+#begindate = str(dt.date(2006, 3, 21))
+#enddate = str(dt.date.today())
+output_path = "data.json"
 
-q = '自炊'
-user = 'malin013'
-datapath = 'test.json'
+# currently doesnt work..
+#sp.call(["twitterscraper", keyword, " -l"+limit," -bd"+begindate, " -ed"+enddate, "-o"+output_path])
 
-def twitter_scraping():
-    with open(datapath, 'w') as f: 
-        for tweet in query_tweets(q+" :from "+user, 10):
-            #f.write(tweet.encode('utf-8'))
-            f.write(tweet)
-        f.close()
+sp.call(["twitterscraper", keyword, "-l "+limit, "-o"+output_path])
 
-
-if __name__ == '__main__':
-    twitter_scraping()
