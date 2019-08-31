@@ -3,6 +3,7 @@
 
 import os
 import time
+import config
 import pandas as pd
 import urllib.request
 import mysql.connector as mydb
@@ -12,11 +13,12 @@ import mysql.connector as mydb
 """
 path = './html/'
 img_path = './img/'
+sleep_time = 60
 
 conn = mydb.connect(
     host='localhost',
     port='3306',
-    user='root',
+    user='hoge',
     password='root',
     database='tweet2insta'
 )
@@ -56,7 +58,7 @@ def get_image_from_html(html):
             img['content'] = img['content'][:-6]
         print(img['content'])
         photo_path = img['content'].split('/')[-1]
-        download_media(img['content'], path+photo_path)
+        download_media(img['content'], img_path+photo_path)
     else:
         pass
     return photo_path
@@ -77,7 +79,7 @@ def post_instragram_store_db(df):
             if new_data and len(img_name) >= 7:
                 print("New tweet is found. Trying to post in Instragram...")
                 post_instagram(img_name, df['text'][i])
-                time.sleep(30)
+                time.sleep(sleep_time)
     conn.commit()
 
 
@@ -92,10 +94,12 @@ def post_instagram(photo_path, caption):
 if __name__ == '__main__':
     df = pd.read_json('data.json', encoding='utf-8')
     df = make_html_url(df)
-    # Extract html from text(e.g., pic.twitter.com/hogefugapiyo)
-    for d in df['html_url']:
-        if d != "":
-            download_media("https://"+d, path+d.split('/')[-1]+'.html')
+
+    if len([name for name in os.listdir(path)]) == 0:
+        # Extract html from text(e.g., pic.twitter.com/hogefugapiyo)
+        for d in df['html_url']:
+            if d != "":
+                download_media("https://"+d, path+d.split('/')[-1]+'.html')
 
     # Extract image from html files
     df['img_url'] = ""
