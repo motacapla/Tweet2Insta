@@ -8,6 +8,8 @@ https://www.instagram.com/developer/
 You have to create your own `config.py`.
 See `requirements.txt` or just `$ pip install -r requirements.txt`
 
+and `$ pip install twitterscraper`
+
 ## Usage
 1. Scrape tweets via twitterscraper
 `$ python twitterscraping.py`
