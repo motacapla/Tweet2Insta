@@ -106,7 +106,7 @@ def post_instagram(photo_path, caption):
 
 
 if __name__ == '__main__':
-    if os.path.exists(output_path):
+    if not os.path.exists(output_path):
         sp.call(["twitterscraper", keyword, "-l "+limit, "-o"+output_path])
     else:
         print(output_path + " is found, skip scraping...")
