@@ -26,7 +26,7 @@ alter table tweets modify text varchar(255) character set utf8mb4;
 ```
 
 2. Make dir
-`$ mkdir img && mkdir html`
+`$ mkdir img`
 
 3. Scrape tweets via twitterscraper
 `$ python twitterscraping.py`
