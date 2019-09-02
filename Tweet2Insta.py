@@ -18,14 +18,15 @@ import subprocess as sp
 """
 sleep_time = 120
 
-user = "malin013"
-keyword = "自炊 from:"+user
-limit = "5"
+#user = "malin013"
+#keyword = "自炊 from:"+user
+keyword = "スタバ"
+limit = "1000"
 
 conn = mydb.connect(
     host='localhost',
     port='3306',
-    user='hoge',
+    user='root',
     password='root',
     database='tweet2insta'
 )
@@ -129,7 +130,7 @@ if __name__ == '__main__':
         df['img_url'][i] = img_path+get_image_from_html(html_path)
 
     # Store data into MySQL
-    post_instragram_store_db(df)
+    # post_instragram_store_db(df)
 
     cur.close()
     conn.close()
