@@ -10,9 +10,6 @@ import mysql.connector as mydb
 import subprocess as sp
 
 
-#sp.call(["twitterscraper", keyword, "-l "+limit, "-o"+output_path])
-
-
 """
     params
 """
@@ -86,6 +83,7 @@ def post_instragram_store_db(df):
             img_name = img_path+df['img_url'][i].split('/')[-1]
             print(df['tweet_id'][i], df['timestamp'][i], df['text'][i], img_name)
             cur.execute("INSERT INTO tweets VALUES (%s, %s, %s, %s)", (int(df['tweet_id'][i]), df['timestamp'][i], df['text'][i], img_name))
+            conn.commit()
             new_data = True
         except:
             print("Already there is data")
@@ -95,7 +93,6 @@ def post_instragram_store_db(df):
                 post_instagram(img_name, df['text'][i])
                 time.sleep(sleep_time)
     conn.commit()
-
 
 # https://github.com/LevPasha/Instagram-API-python
 def post_instagram(photo_path, caption):
@@ -113,13 +110,13 @@ if __name__ == '__main__':
     df = pd.read_json(output_path, encoding='utf-8')
     df = make_html_url(df)
 
-    if len([name for name in os.listdir(path)]) == 0:
+    #if len([name for name in os.listdir(path)]) == 0:
         # Extract html from text(e.g., pic.twitter.com/hogefugapiyo)
-        for d in df['html_url']:
-            if d != "":
-                download_media("https://"+d, path+d.split('/')[-1]+'.html')
-    else:
-        print("html found, skip downloading html...")
+    for d in df['html_url']:
+        if d != "":
+            download_media("https://"+d, path+d.split('/')[-1]+'.html')
+    #else:
+    #    print("html found, skip downloading html...")
     # Extract image from html files
     df['img_url'] = ""
     for i,d in enumerate(df['html_url']):
