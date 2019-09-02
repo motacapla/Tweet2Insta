@@ -8,17 +8,15 @@ import pandas as pd
 import urllib.request
 import mysql.connector as mydb
 import subprocess as sp
-
+import re
 
 """
     params
 """
-sleep_time = 120
-
 #user = "malin013"
 #keyword = "自炊 from:"+user
 keyword = "スタバ"
-limit = "1000"
+limit = str(20*1000)
 
 conn = mydb.connect(
     host='localhost',
@@ -32,7 +30,6 @@ cur = conn.cursor()
 """
     settings(do not touch)
 """
-path = './html/'
 img_path = './img/'
 output_path = "data.json"
 
@@ -49,51 +46,45 @@ def download_media(url, photo_path='./'):
         print(e)
 
 
-def make_html_url(df):
-    df['html_url'] = ""
-    for i,data in enumerate(df['text']):
-        for d in data.split(' '):
-            if 'pic.twitter.com' in d:
-                df['html_url'][i] = d
-    df['html_url'][48] = "pic.twitter.com/3bjq157lU1"
-    return df
+pattern = r"pic.twitter.com/[a-zA-Z0-9]{10}"
+reg = re.compile(pattern)
+def extract_pics_url(sentence):
+    m = reg.search(sentence)
+    if m == None:
+        return ""
+    return m.group(0)
 
 
-def get_image_from_html(html):
+def get_image_from_url(url):
     from bs4 import BeautifulSoup
-    with open(html, mode='r') as f:
-        soup = BeautifulSoup(f.read(), "html.parser")
     photo_path = ""
-    img = soup.find("meta", attrs={'property': 'og:image', 'content': True})
-    if img is not None:
-        if ':large' in img['content']:
-            img['content'] = img['content'][:-6]
-        print(img['content'])
-        photo_path = img['content'].split('/')[-1]
-        download_media(img['content'], img_path+photo_path)
-    else:
-        pass
+    with urllib.request.urlopen(url) as web_file:
+        data = web_file.read()
+        soup = BeautifulSoup(data, "html.parser")
+        img = soup.find("meta", attrs={'property': 'og:image', 'content': True})
+        if img is not None:
+            if ':large' in img['content']:
+                img['content'] = img['content'][:-6]
+            if not 'profile_images' in img['content']:
+                print(img['content'])
+                photo_path = img['content'].split('/')[-1]
+                download_media(img['content'], img_path+photo_path)
+        else:
+            pass
     return photo_path
 
 
-def post_instragram_store_db(df):
+def store_db(df):
     # insert into MySQL and post Instagram if it is new 
     for i in range(len(df)):
-        new_data = False
         try:
             img_name = img_path+df['img_url'][i].split('/')[-1]
             print(df['tweet_id'][i], df['timestamp'][i], df['text'][i], img_name)
             cur.execute("INSERT INTO tweets VALUES (%s, %s, %s, %s)", (int(df['tweet_id'][i]), df['timestamp'][i], df['text'][i], img_name))
-            conn.commit()
-            new_data = True
         except:
             print("Already there is data")
-        finally: 
-            if new_data and len(img_name) >= 7:
-                print("New tweet is found. Trying to post in Instragram...")
-                post_instagram(img_name, df['text'][i])
-                time.sleep(sleep_time)
     conn.commit()
+
 
 # https://github.com/LevPasha/Instagram-API-python
 def post_instagram(photo_path, caption):
@@ -104,31 +95,22 @@ def post_instagram(photo_path, caption):
 
 
 if __name__ == '__main__':
+    # Scraping
     if not os.path.exists(output_path):
         sp.call(["twitterscraper", keyword, "-l "+limit, "-o"+output_path])
     else:
         print(output_path + " is found, skip scraping...")
     df = pd.read_json(output_path, encoding='utf-8')
-    df = make_html_url(df)
 
-    #if len([name for name in os.listdir(path)]) == 0:
-        # Extract html from text(e.g., pic.twitter.com/hogefugapiyo)
-    for d in df['html_url']:
-        if d != "":
-            download_media("https://"+d, path+d.split('/')[-1]+'.html')
-    #else:
-    #    print("html found, skip downloading html...")
-    # Extract image from html files
+    # Extract image from html url
     df['img_url'] = ""
-    for i,d in enumerate(df['html_url']):
-        html_path = path+d.split('/')[-1]+'.html'
-        if './html/.html' in html_path:
-            continue 
-        df['img_url'][i] = img_path+get_image_from_html(html_path)
+    for i,d in enumerate(df['tweet_url']):
+        html_path = "https://twitter.com" + str(d)
+        df['img_url'][i] = img_path+get_image_from_url(html_path)
+        print(df['text'][i])
 
     # Store data into MySQL
-    # post_instragram_store_db(df)
+    store_db(df)
 
     cur.close()
     conn.close()
-
