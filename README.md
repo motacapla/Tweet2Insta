@@ -34,6 +34,8 @@ alter table tweets modify text varchar(255) character set utf8mb4;
 4. Store data into DB, and post Instagram
 `$ python Tweet2Insta.py`
 
+5. Use cron for update posts with `cronTwitter2Insta.py`
+
 ## References
 - twitterscraper
 https://github.com/taspinar/twitterscraper
