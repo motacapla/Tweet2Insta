@@ -77,9 +77,6 @@ def get_image_from_url(url):
         data = web_file.read()
         soup = BeautifulSoup(data, "html.parser")
         img = soup.find("meta", attrs={'property': 'og:image', 'content': True})
-
-        print("(debug)" + str(img))
-
         if img is not None:
             if ':large' in img['content']:
                 img['content'] = img['content'][:-6]
@@ -98,18 +95,21 @@ def store_db(df):
         row = cur.fetchone()
         if row == "" or row == None:
             if img_url[i] == "" or img_url[i] == None or img_url[i] == './img/':
-                continue
+                continue            
             img_name = img_path+img_url[i].split('/')[-1]
             print(df['tweet_id'].iloc[i], df['timestamp'].iloc[i], df['text'].iloc[i], img_name)
             # Insert into db
             cur.execute("INSERT INTO tweets VALUES (%s, %s, %s, %s)", (int(df['tweet_id'].iloc[i]), df['timestamp'].iloc[i], df['text'].iloc[i], img_name))
+            conn.commit()
             # Change aspect ratio
             resize_img(img_name)
             # Post instagram
             post_instagram(img_name, df['text'].iloc[i])
             time.sleep(sleep_time)
-    conn.commit()
+        else:
+            print("This tweet has already been posted on Instagram")
 
+# Instagram requires a picture with 4:5 aspect ratio
 def resize_img(url):
     img = Image.open(url)
     if img.width > img.height:
@@ -117,6 +117,7 @@ def resize_img(url):
     else :
         img_resize = img.resize((img.width, int(img.width*ratio_height/ratio_width)), Image.LANCZOS)
     img_resize.save(url)
+
 
 # https://github.com/LevPasha/Instagram-API-python
 def post_instagram(photo_path, caption):
@@ -134,7 +135,6 @@ def get_tweets():
         if keyword in tweet.text :
             tmp = pd.DataFrame({'tweet_id': tweet.id, 'timestamp': tweet.created_at, 'text': tweet.text.replace('\n',''), 'tweet_url': url}, index=['datetime',])
             tweet_data = pd.concat([tweet_data, tmp])
-            print("get_tweets: ", tweet.created_at, tweet.text, url)
     return tweet_data
 
 
@@ -152,6 +152,5 @@ if __name__ == '__main__':
 
     # Store data into MySQL
     store_db(df)
-
     cur.close()
     conn.close()
